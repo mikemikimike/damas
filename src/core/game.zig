@@ -144,12 +144,12 @@ test "applyMove flips turn and rejects illegal moves" {
     defer game.deinit();
 
     // Legal opening move: (2,0) -> (3,1).
-    const legal = Move{ .from = board_mod.rowColToSquare(2, 0), .to = board_mod.rowColToSquare(3, 1), .captured = [_]u8{0} ** 12, .num_captured = 0 };
+    const legal = Move{ .from = board_mod.rowColToSquare(2, 0), .to = board_mod.rowColToSquare(3, 1), .captured = @as([12]u8, @splat(0)), .num_captured = 0 };
     try std.testing.expect(game.applyMove(legal));
     try std.testing.expectEqual(Color.black, game.turn);
 
     // Illegal move (white's pawn, black's turn): rejected, turn unchanged.
-    const illegal = Move{ .from = board_mod.rowColToSquare(2, 2), .to = board_mod.rowColToSquare(3, 3), .captured = [_]u8{0} ** 12, .num_captured = 0 };
+    const illegal = Move{ .from = board_mod.rowColToSquare(2, 2), .to = board_mod.rowColToSquare(3, 3), .captured = @as([12]u8, @splat(0)), .num_captured = 0 };
     try std.testing.expect(!game.applyMove(illegal));
     try std.testing.expectEqual(Color.black, game.turn);
 }
@@ -169,7 +169,7 @@ test "game over detection and winner" {
     defer game.deinit();
 
     // White pawn at (0,0) fully blocked: no moves for white.
-    game.board = [_]Piece{.empty} ** 32;
+    game.board = @as([32]Piece, @splat(.empty));
     game.board[board_mod.rowColToSquare(0, 0)] = .white_pawn;
     game.board[board_mod.rowColToSquare(1, 1)] = .black_pawn;
     game.board[board_mod.rowColToSquare(2, 0)] = .black_pawn;
@@ -181,7 +181,7 @@ test "game over detection and winner" {
     try std.testing.expectEqual(@as(?Color, null), game.winner());
 
     // No pieces left for white.
-    game.board = [_]Piece{.empty} ** 32;
+    game.board = @as([32]Piece, @splat(.empty));
     game.board[board_mod.rowColToSquare(7, 7)] = .black_pawn;
     game.turn = .white;
     try std.testing.expect(game.isGameOver());
@@ -219,7 +219,7 @@ test "repetition: same position 3 times is a draw" {
     var game = try Game.initRules(std.testing.allocator, .english);
     defer game.deinit();
 
-    game.board = [_]Piece{.empty} ** 32;
+    game.board = @as([32]Piece, @splat(.empty));
     game.board[board_mod.rowColToSquare(4, 2)] = .white_king;
     game.board[board_mod.rowColToSquare(4, 6)] = .black_king;
     game.turn = .white;
@@ -240,7 +240,7 @@ test "repetition counts root position without manual seed" {
     var game = try Game.initRules(std.testing.allocator, .english);
     defer game.deinit();
 
-    game.board = [_]Piece{.empty} ** 32;
+    game.board = @as([32]Piece, @splat(.empty));
     game.board[board_mod.rowColToSquare(4, 2)] = .white_king;
     game.board[board_mod.rowColToSquare(4, 6)] = .black_king;
     game.turn = .white;
@@ -262,7 +262,7 @@ test "40-move rule: no capture or promotion for 80 plies is a draw" {
     defer game.deinit();
 
     game.halfmove_clock = 79;
-    const legal = Move{ .from = board_mod.rowColToSquare(2, 0), .to = board_mod.rowColToSquare(3, 1), .captured = [_]u8{0} ** 12, .num_captured = 0 };
+    const legal = Move{ .from = board_mod.rowColToSquare(2, 0), .to = board_mod.rowColToSquare(3, 1), .captured = @as([12]u8, @splat(0)), .num_captured = 0 };
     try std.testing.expect(game.applyMove(legal));
     try std.testing.expectEqual(@as(u16, 80), game.halfmove_clock);
     try std.testing.expect(game.isGameOver());
@@ -274,13 +274,13 @@ test "applyMove is rejected after game over by 80-ply clock" {
     defer game.deinit();
 
     game.halfmove_clock = 79;
-    const white_quiet = Move{ .from = board_mod.rowColToSquare(2, 0), .to = board_mod.rowColToSquare(3, 1), .captured = [_]u8{0} ** 12, .num_captured = 0 };
+    const white_quiet = Move{ .from = board_mod.rowColToSquare(2, 0), .to = board_mod.rowColToSquare(3, 1), .captured = @as([12]u8, @splat(0)), .num_captured = 0 };
     try std.testing.expect(game.applyMove(white_quiet));
     try std.testing.expectEqual(@as(u16, 80), game.halfmove_clock);
     try std.testing.expect(game.isGameOver());
 
     // Legal for black on board, but rejected because game already over.
-    const black_quiet = Move{ .from = board_mod.rowColToSquare(5, 1), .to = board_mod.rowColToSquare(4, 0), .captured = [_]u8{0} ** 12, .num_captured = 0 };
+    const black_quiet = Move{ .from = board_mod.rowColToSquare(5, 1), .to = board_mod.rowColToSquare(4, 0), .captured = @as([12]u8, @splat(0)), .num_captured = 0 };
     try std.testing.expect(!game.applyMove(black_quiet));
     try std.testing.expectEqual(@as(Color, .black), game.turn);
     try std.testing.expectEqual(@as(u16, 80), game.halfmove_clock);
@@ -294,7 +294,7 @@ test "issue #28 board: white pawn blocked forward, capture landing occupied — 
     // -> draw, not a loss (game.zig winner() returns null).
     var game = try Game.initRules(std.testing.allocator, .spanish);
     defer game.deinit();
-    game.board = [_]Piece{.empty} ** 32;
+    game.board = @as([32]Piece, @splat(.empty));
     game.board[board_mod.rowColToSquare(2, 0)] = .white_pawn;
     game.board[board_mod.rowColToSquare(3, 1)] = .black_king;
     game.board[board_mod.rowColToSquare(3, 7)] = .black_pawn;
@@ -316,7 +316,7 @@ test "capture resets the halfmove clock" {
 
     // White pawn captures (3,3); a second black pawn survives the capture so
     // the game isn't over from missing pieces.
-    game.board = [_]Piece{.empty} ** 32;
+    game.board = @as([32]Piece, @splat(.empty));
     game.board[board_mod.rowColToSquare(2, 2)] = .white_pawn;
     game.board[board_mod.rowColToSquare(3, 3)] = .black_pawn;
     game.board[board_mod.rowColToSquare(6, 6)] = .black_pawn;
@@ -338,7 +338,7 @@ test "promotion resets the halfmove clock" {
     var game = try Game.initRules(std.testing.allocator, .english);
     defer game.deinit();
 
-    game.board = [_]Piece{.empty} ** 32;
+    game.board = @as([32]Piece, @splat(.empty));
     game.board[board_mod.rowColToSquare(6, 2)] = .white_pawn;
     game.board[board_mod.rowColToSquare(6, 6)] = .black_pawn; // survives the promotion
     game.turn = .white;
@@ -361,7 +361,7 @@ test "repetition history is cleared after a capture" {
     defer game.deinit();
 
     // Phase 1: shuffle cycle builds up repetition counts.
-    game.board = [_]Piece{.empty} ** 32;
+    game.board = @as([32]Piece, @splat(.empty));
     game.board[board_mod.rowColToSquare(4, 2)] = .white_king;
     game.board[board_mod.rowColToSquare(4, 6)] = .black_king;
     game.turn = .white;
@@ -371,7 +371,7 @@ test "repetition history is cleared after a capture" {
     try std.testing.expect(!game.isGameOver());
 
     // Phase 2: an irreversible capture clears the history and resets the clock.
-    game.board = [_]Piece{.empty} ** 32;
+    game.board = @as([32]Piece, @splat(.empty));
     game.board[board_mod.rowColToSquare(2, 2)] = .white_pawn;
     game.board[board_mod.rowColToSquare(3, 3)] = .black_pawn;
     game.board[board_mod.rowColToSquare(6, 6)] = .black_pawn;
