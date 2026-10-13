@@ -140,7 +140,7 @@ pub fn processEnviron() ?std.process.Environ {
 /// Read an API key from the environment; error.MissingApiKey if unset.
 /// Caller owns the returned memory.
 pub fn apiKey(allocator: std.mem.Allocator, name: []const u8) ![]const u8 {
-    if (builtin.os.tag == .windows) {
+    if (builtin.target.os.tag == .windows) {
         // PEB path: no C `environ` symbol needed.
         const env: std.process.Environ = .{ .block = .global };
         return env.getAlloc(allocator, name) catch |err| switch (err) {
