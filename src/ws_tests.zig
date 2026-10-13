@@ -46,7 +46,7 @@ fn parseLegalMoves(allocator: std.mem.Allocator, json: []const u8) !std.json.Par
 fn issue24Game(allocator: std.mem.Allocator) !*game_mod.Game {
     var game = try game_mod.Game.init(allocator);
     game.rules = .spanish;
-    game.board = [_]board_mod.Piece{.empty} ** 32;
+    game.board = @as([32]board_mod.Piece, @splat(.empty));
     game.board[4] = .white_pawn;
     game.board[9] = .black_king;
     game.board[18] = .black_pawn;
@@ -65,7 +65,7 @@ fn issue24Game(allocator: std.mem.Allocator) !*game_mod.Game {
 fn convergentGame(allocator: std.mem.Allocator) !*game_mod.Game {
     var game = try game_mod.Game.init(allocator);
     game.rules = .spanish;
-    game.board = [_]board_mod.Piece{.empty} ** 32;
+    game.board = @as([32]board_mod.Piece, @splat(.empty));
     game.board[4] = .white_king;
     game.board[6] = .black_pawn;
     game.board[9] = .black_pawn;
@@ -76,7 +76,7 @@ fn convergentGame(allocator: std.mem.Allocator) !*game_mod.Game {
 
 fn finishedGame(allocator: std.mem.Allocator) !*game_mod.Game {
     var game = try game_mod.Game.init(allocator);
-    game.board = [_]board_mod.Piece{.empty} ** 32;
+    game.board = @as([32]board_mod.Piece, @splat(.empty));
     game.board[31] = .black_pawn;
     game.turn = .white;
     return game;

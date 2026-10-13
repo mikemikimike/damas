@@ -24,7 +24,7 @@ pub const RowCol = struct { row: u8, col: u8 };
 /// Standard opening position: 12 white pawns on rows 0-2, 12 black pawns on
 /// rows 5-7.
 pub fn initialBoard() Board32 {
-    var board: Board32 = [_]Piece{.empty} ** 32;
+    var board: Board32 = @as([32]Piece, @splat(.empty));
     for (0..3) |row| {
         const start: u8 = if (row % 2 == 1) 1 else 0;
         var col: u8 = start;

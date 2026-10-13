@@ -1,7 +1,7 @@
 # damas
 
 Checkers engine and apps. Core + C library are zero-dependency std-only Zig;
-the TUI uses [libvaxis](https://github.com/rockorager/libvaxis) (Zig 0.16).
+the TUI uses [libvaxis](https://github.com/rockorager/libvaxis) (Zig 0.17).
 Two rule variants: **English draughts** (default) and **Spanish damas** (flying
 kings, pawns capture forward only, mandatory capture with the quantity/quality
 laws).
@@ -26,7 +26,7 @@ server's default variant for the web UI.
 Learn the design, engine and LLM integration: [docs/](docs/README.md).
 
 Build: `zig build` (binaries in `zig-out/bin/`), tests: `zig build test`
-(requires Zig **0.16.0 release** — dev builds don't compile libvaxis).
+(requires Zig **0.17.0**).
 
 ## LLM providers
 
@@ -77,7 +77,7 @@ Two ways to run the web UI:
 ## Distribution
 
 CI (`.github/workflows/ci.yml`) builds and smoke-tests on Ubuntu, macOS and
-Windows (pin `0.16.0`). `.github/workflows/build-all.yml` cross-compiles the
+Windows (pin `0.17.0`). `.github/workflows/build-all.yml` cross-compiles the
 14 release targets on every PR.
 
 Tag `v*.*.*` triggers `.github/workflows/release.yml`:

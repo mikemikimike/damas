@@ -40,7 +40,7 @@ pub fn hash(board: Board32, turn: Color) u64 {
     var h: u64 = 0;
     for (0..32) |sq| {
         const p = board[sq];
-        if (p != .empty) h ^= table[sq][@intFromEnum(p)];
+        if (p != .empty) h ^= table[sq][@backingInt(p)];
     }
     if (turn == .black) h ^= turn_hash;
     // Key 0 is the TT empty-slot marker; never hand a position hash of 0 to
@@ -63,7 +63,7 @@ pub fn updateHash(pre_board: Board32, move: Move, parent_hash: u64) u64 {
     // both removes it and adds the child's (opponent's) copy.
     h ^= turn_hash;
     const piece = pre_board[move.from];
-    h ^= table[move.from][@intFromEnum(piece)];
+    h ^= table[move.from][@backingInt(piece)];
     // Final piece on `to`: mirrors rules.applyMove (promotion on landing).
     var final_piece = piece;
     const rc = board_mod.squareToRowCol(move.to);
@@ -72,10 +72,10 @@ pub fn updateHash(pre_board: Board32, move: Move, parent_hash: u64) u64 {
     } else if (piece == .black_pawn and rc.row == 0) {
         final_piece = .black_king;
     }
-    h ^= table[move.to][@intFromEnum(final_piece)];
+    h ^= table[move.to][@backingInt(final_piece)];
     for (0..move.num_captured) |i| {
         const cap_sq = move.captured[i];
-        h ^= table[cap_sq][@intFromEnum(pre_board[cap_sq])];
+        h ^= table[cap_sq][@backingInt(pre_board[cap_sq])];
     }
     if (h == 0) h = 1;
     return h;
@@ -91,7 +91,7 @@ test "hash never returns zero (TT empty marker)" {
     // Empty board, white to move: XOR of nothing must not collide with the
     // transposition table's empty-slot marker (key 0). The black case pins
     // turn_hash != 0 (white/black would otherwise hash identically).
-    const empty = [_]Piece{.empty} ** 32;
+    const empty = @as([32]Piece, @splat(.empty));
     try std.testing.expect(hash(empty, .white) != 0);
     try std.testing.expect(hash(empty, .black) != 0);
 }
@@ -113,42 +113,42 @@ test "updateHash matches hash for every legal move across positions" {
     // kings, and Spanish flying kings — plus the initial position.
     const rules = @import("../rules.zig");
 
-    var quiet: Board32 = [_]Piece{.empty} ** 32;
+    var quiet: Board32 = @as([32]Piece, @splat(.empty));
     quiet[board_mod.rowColToSquare(2, 2)] = .white_pawn;
     quiet[board_mod.rowColToSquare(5, 5)] = .black_pawn;
 
-    var single: Board32 = [_]Piece{.empty} ** 32;
+    var single: Board32 = @as([32]Piece, @splat(.empty));
     single[board_mod.rowColToSquare(2, 2)] = .white_pawn;
     single[board_mod.rowColToSquare(3, 3)] = .black_pawn;
 
-    var multi: Board32 = [_]Piece{.empty} ** 32;
+    var multi: Board32 = @as([32]Piece, @splat(.empty));
     multi[board_mod.rowColToSquare(0, 0)] = .white_pawn;
     multi[board_mod.rowColToSquare(1, 1)] = .black_pawn;
     multi[board_mod.rowColToSquare(3, 3)] = .black_pawn;
 
-    var promo_w: Board32 = [_]Piece{.empty} ** 32;
+    var promo_w: Board32 = @as([32]Piece, @splat(.empty));
     promo_w[board_mod.rowColToSquare(6, 6)] = .white_pawn;
 
-    var promo_w_cap: Board32 = [_]Piece{.empty} ** 32;
+    var promo_w_cap: Board32 = @as([32]Piece, @splat(.empty));
     promo_w_cap[board_mod.rowColToSquare(5, 5)] = .white_pawn;
     promo_w_cap[board_mod.rowColToSquare(6, 6)] = .black_pawn;
 
-    var promo_b: Board32 = [_]Piece{.empty} ** 32;
+    var promo_b: Board32 = @as([32]Piece, @splat(.empty));
     promo_b[board_mod.rowColToSquare(1, 1)] = .black_pawn;
 
-    var promo_b_cap: Board32 = [_]Piece{.empty} ** 32;
+    var promo_b_cap: Board32 = @as([32]Piece, @splat(.empty));
     promo_b_cap[board_mod.rowColToSquare(2, 2)] = .black_pawn;
     promo_b_cap[board_mod.rowColToSquare(1, 1)] = .white_pawn;
 
-    var kings: Board32 = [_]Piece{.empty} ** 32;
+    var kings: Board32 = @as([32]Piece, @splat(.empty));
     kings[board_mod.rowColToSquare(4, 4)] = .white_king;
     kings[board_mod.rowColToSquare(3, 3)] = .black_pawn;
 
-    var king_vs_king: Board32 = [_]Piece{.empty} ** 32;
+    var king_vs_king: Board32 = @as([32]Piece, @splat(.empty));
     king_vs_king[board_mod.rowColToSquare(4, 4)] = .white_king;
     king_vs_king[board_mod.rowColToSquare(5, 5)] = .black_king;
 
-    var flying: Board32 = [_]Piece{.empty} ** 32;
+    var flying: Board32 = @as([32]Piece, @splat(.empty));
     flying[board_mod.rowColToSquare(2, 2)] = .white_king;
     flying[board_mod.rowColToSquare(5, 5)] = .black_pawn;
 

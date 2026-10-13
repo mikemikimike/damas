@@ -7,7 +7,7 @@ on:
     branches: [master, main]
 
 env:
-  ZIG_VERSION: "0.16.0"
+  ZIG_VERSION: "0.17.0"
 
 jobs:
   build-and-test:
@@ -21,7 +21,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - name: Set up Zig (pin 0.16.0 release)
+      - name: Set up Zig (pin 0.17.0 release)
         uses: mlugg/setup-zig@v2
         with:
           version: ${{ env.ZIG_VERSION }}

@@ -51,8 +51,8 @@ test "MoveList add/clear/slice" {
     try std.testing.expectEqual(@as(usize, 0), list.len);
     try std.testing.expectEqual(@as(usize, 0), list.slice().len);
 
-    const m1 = Move{ .from = 9, .to = 18, .captured = [_]u8{13} ** 12, .num_captured = 1 };
-    const m2 = Move{ .from = 9, .to = 13, .captured = [_]u8{0} ** 12, .num_captured = 0 };
+    const m1 = Move{ .from = 9, .to = 18, .captured = @as([12]u8, @splat(13)), .num_captured = 1 };
+    const m2 = Move{ .from = 9, .to = 13, .captured = @as([12]u8, @splat(0)), .num_captured = 0 };
 
     try std.testing.expect(list.add(m1));
     try std.testing.expect(list.add(m2));
