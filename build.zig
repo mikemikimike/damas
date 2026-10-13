@@ -16,7 +16,7 @@ pub fn build(b: *std.Build) void {
     // Run steps only make sense for the native target (cross binaries
     // can't execute on the build host).
     const native = target.result.cpu.arch == builtin.cpu.arch and
-        target.result.os.tag == builtin.os.tag;
+        target.result.os.tag == builtin.target.os.tag;
 
     // The exe compiles for every target; only the test *runs* are gated on
     // native. The module is rooted at the repo root (damas_root.zig) so the
