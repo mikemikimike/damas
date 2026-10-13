@@ -1,10 +1,7 @@
 //! Minimal blocking HTTP JSON POST helper (std.http.Client, std only).
 //!
-//! 0.16.0's std.http.Client has no timeout support: there are no
-//! connect_timeout_ms / read_timeout_ms client fields and no timeout on
-//! request(); the ConnectTcpOptions.timeout field exists but is
-//! unimplemented (Threaded's netConnectIpPosix panics "TODO" when it is
-//! set). To keep an LLM endpoint that accepts and never responds from
+//! std.http.Client does not expose an end-to-end request/read timeout through
+//! request(). To keep an LLM endpoint that accepts and never responds from
 //! blocking the calling thread forever, the exchange runs on a worker
 //! thread and the caller gives up after a deadline. An abandoned worker is
 //! detached and leaks (thread + its page_allocator shared block) — the only

@@ -176,7 +176,7 @@ fn readChoice(max: usize) !usize {
 }
 
 /// Cross-platform stdin read. Windows has no `std.posix.read` on fd 0
-/// (it's a HANDLE), so route through the 0.16 Io abstraction there;
+/// (it's a HANDLE), so route through the std.Io abstraction there;
 /// posix keeps the raw read. EOF is reported as 0 bytes on both.
 fn readStdin(buf: []u8) !usize {
     if (comptime builtin.target.os.tag == .windows) {
