@@ -76,7 +76,7 @@ const State = struct {
             .cursor_row = 0,
             .cursor_col = 0,
             .selected = null,
-            .targets = [_]bool{false} ** 32,
+            .targets = @as([32]bool, @splat(false)),
             .last_move = null,
             .history = .{},
             .msg = null,
@@ -228,12 +228,12 @@ fn handleEnter(state: *State) !void {
 
 fn clearSelection(state: *State) void {
     state.selected = null;
-    state.targets = [_]bool{false} ** 32;
+    state.targets = @as([32]bool, @splat(false));
     state.msg = null;
 }
 
 fn updateTargets(state: *State) void {
-    state.targets = [_]bool{false} ** 32;
+    state.targets = @as([32]bool, @splat(false));
     const sel = state.selected.?;
     var moves = move_mod.MoveList{};
     state.game.generateMoves(&moves);
