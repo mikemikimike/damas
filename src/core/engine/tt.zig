@@ -70,7 +70,7 @@ test "put/get round-trip" {
         .depth = 5,
         .score = 123,
         .flag = .exact,
-        .move = Move{ .from = 1, .to = 2, .captured = [_]u8{0} ** 12, .num_captured = 0 },
+        .move = Move{ .from = 1, .to = 2, .captured = @as([12]u8, @splat(0)), .num_captured = 0 },
     };
     tt.put(e);
     const got = tt.get(42);
@@ -89,7 +89,7 @@ test "collision: different key at same index not returned" {
         .depth = 1,
         .score = 1,
         .flag = .exact,
-        .move = Move{ .from = 1, .to = 2, .captured = [_]u8{0} ** 12, .num_captured = 0 },
+        .move = Move{ .from = 1, .to = 2, .captured = @as([12]u8, @splat(0)), .num_captured = 0 },
     });
     // 298 & 255 == 42 & 255, but keys differ.
     try std.testing.expect(tt.get(298) == null);
@@ -104,14 +104,14 @@ test "collision keeps deeper resident entry over shallower incoming" {
         .depth = 8,
         .score = 111,
         .flag = .exact,
-        .move = Move{ .from = 1, .to = 2, .captured = [_]u8{0} ** 12, .num_captured = 0 },
+        .move = Move{ .from = 1, .to = 2, .captured = @as([12]u8, @splat(0)), .num_captured = 0 },
     });
     tt.put(.{
         .key = 298,
         .depth = 4,
         .score = 222,
         .flag = .lower_bound,
-        .move = Move{ .from = 2, .to = 3, .captured = [_]u8{0} ** 12, .num_captured = 0 },
+        .move = Move{ .from = 2, .to = 3, .captured = @as([12]u8, @splat(0)), .num_captured = 0 },
     });
 
     const got = tt.get(42);
@@ -130,14 +130,14 @@ test "collision replaces on equal or deeper depth" {
         .depth = 6,
         .score = 111,
         .flag = .exact,
-        .move = Move{ .from = 1, .to = 2, .captured = [_]u8{0} ** 12, .num_captured = 0 },
+        .move = Move{ .from = 1, .to = 2, .captured = @as([12]u8, @splat(0)), .num_captured = 0 },
     });
     tt.put(.{
         .key = 298,
         .depth = 6,
         .score = 222,
         .flag = .upper_bound,
-        .move = Move{ .from = 2, .to = 3, .captured = [_]u8{0} ** 12, .num_captured = 0 },
+        .move = Move{ .from = 2, .to = 3, .captured = @as([12]u8, @splat(0)), .num_captured = 0 },
     });
 
     var got = tt.get(298);
@@ -151,7 +151,7 @@ test "collision replaces on equal or deeper depth" {
         .depth = 7,
         .score = 333,
         .flag = .lower_bound,
-        .move = Move{ .from = 3, .to = 4, .captured = [_]u8{0} ** 12, .num_captured = 0 },
+        .move = Move{ .from = 3, .to = 4, .captured = @as([12]u8, @splat(0)), .num_captured = 0 },
     });
 
     got = tt.get(42);
@@ -169,7 +169,7 @@ test "clear empties the table" {
         .depth = 1,
         .score = 1,
         .flag = .exact,
-        .move = Move{ .from = 1, .to = 2, .captured = [_]u8{0} ** 12, .num_captured = 0 },
+        .move = Move{ .from = 1, .to = 2, .captured = @as([12]u8, @splat(0)), .num_captured = 0 },
     });
     tt.clear();
     try std.testing.expect(tt.get(7) == null);
