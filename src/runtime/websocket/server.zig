@@ -106,7 +106,7 @@ pub fn serveWeb(port: u16, default_rules: game_mod.Variant, default_provider: ?[
 fn openBrowser(port: u16) void {
     var url_buf: [64]u8 = undefined;
     const url = std.fmt.bufPrint(&url_buf, "http://127.0.0.1:{d}", .{port}) catch return;
-    const launcher: []const u8 = switch (builtin.os.tag) {
+    const launcher: []const u8 = switch (builtin.target.os.tag) {
         .macos => "open",
         .linux => "xdg-open",
         else => return,
@@ -129,7 +129,7 @@ fn openBrowser(port: u16) void {
 /// Windows). Process-wide and permanent: do not add `Child.wait()` while this
 /// is set — std panics on the resulting ECHILD.
 fn autoReapChildren() void {
-    if (comptime builtin.os.tag != .macos and builtin.os.tag != .linux) return;
+    if (comptime builtin.target.os.tag != .macos and builtin.target.os.tag != .linux) return;
     _ = std.posix.sigaction(std.posix.SIG.CHLD, &.{
         .handler = .{ .handler = std.posix.SIG.IGN },
         .mask = std.posix.sigemptyset(),
@@ -138,7 +138,7 @@ fn autoReapChildren() void {
 }
 
 test "server: browser-launch children are auto-reaped on POSIX" {
-    if (builtin.os.tag == .windows) return; // fix is POSIX-only
+    if (builtin.target.os.tag == .windows) return; // fix is POSIX-only
     // Save the current disposition: the test must leave the process exactly
     // as it found it (the server sets SIG_IGN once, for its whole lifetime).
     var prev: std.posix.Sigaction = undefined;
@@ -381,7 +381,7 @@ const idle_timeout_ms: i32 = 5 * 60 * 1000;
 /// read just blocks, status quo.
 fn waitReadable(reader: *const std.Io.Reader, fd: std.posix.fd_t, timeout_ms: i32) bool {
     if (reader.end > reader.seek) return true;
-    if (builtin.os.tag == .windows) return true;
+    if (builtin.target.os.tag == .windows) return true;
     var fds = [_]std.posix.pollfd{.{ .fd = fd, .events = std.posix.POLL.IN, .revents = 0 }};
     // poll failure: let the read surface the real error.
     const n = std.posix.poll(&fds, timeout_ms) catch return true;
