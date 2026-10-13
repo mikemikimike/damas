@@ -2,7 +2,7 @@
     .name = .damas,
     .version = "0.1.0",
     .fingerprint = 0xdcef94e5173574d7,
-    .minimum_zig_version = "0.16.0",
+    .minimum_zig_version = "0.17.0",
     .dependencies = .{
         .vaxis = .{
             .url = "git+https://github.com/rockorager/libvaxis.git#82cec0db8fc57c32f2ce4c1c3fc377052f4c86ba",
