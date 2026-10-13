@@ -268,9 +268,9 @@ pub fn generateMoves(board: Board32, turn: Color, moves: *MoveList, variant: Var
         if (piece == .empty) continue;
         const color = pieceColor(piece) orelse continue;
         if (color != turn) continue;
-        var visited = [_]bool{false} ** 32;
+        var visited = @as([32]bool, @splat(false));
         visited[sq] = true;
-        var captured = [_]u8{0} ** 12;
+        var captured = @as([12]u8, @splat(0));
         genCaptures(board, @intCast(sq), @intCast(sq), turn, &visited, &captured, 0, moves, variant);
     }
     if (variant == .spanish) applyCaptureLaws(board, moves);
@@ -290,7 +290,7 @@ pub fn generateMoves(board: Board32, turn: Color, moves: *MoveList, variant: Var
                 while (true) {
                     const cur_sq = rowColToSquare(cur.row, cur.col);
                     if (board[cur_sq] != .empty) break;
-                    _ = moves.add(.{ .from = from, .to = cur_sq, .captured = [_]u8{0} ** 12, .num_captured = 0 });
+                    _ = moves.add(.{ .from = from, .to = cur_sq, .captured = @as([12]u8, @splat(0)), .num_captured = 0 });
                     cur = step(cur, d) orelse break;
                 }
             }
@@ -299,7 +299,7 @@ pub fn generateMoves(board: Board32, turn: Color, moves: *MoveList, variant: Var
                 const to = step(rc, d) orelse continue;
                 const to_sq = rowColToSquare(to.row, to.col);
                 if (board[to_sq] != .empty) continue;
-                _ = moves.add(.{ .from = from, .to = to_sq, .captured = [_]u8{0} ** 12, .num_captured = 0 });
+                _ = moves.add(.{ .from = from, .to = to_sq, .captured = @as([12]u8, @splat(0)), .num_captured = 0 });
             }
         }
     }
@@ -360,7 +360,7 @@ test "initial position: 7 legal non-capture moves for white" {
 }
 
 test "mandatory capture: only capture moves generated" {
-    var board: Board32 = [_]Piece{.empty} ** 32;
+    var board: Board32 = @as([32]Piece, @splat(.empty));
     board[rowColToSquare(2, 2)] = .white_pawn;
     board[rowColToSquare(2, 6)] = .white_pawn; // could move quietly, but must not
     board[rowColToSquare(3, 3)] = .black_pawn;
@@ -377,7 +377,7 @@ test "mandatory capture: only capture moves generated" {
 }
 
 test "multi-jump chain records both captured squares" {
-    var board: Board32 = [_]Piece{.empty} ** 32;
+    var board: Board32 = @as([32]Piece, @splat(.empty));
     board[rowColToSquare(2, 2)] = .white_pawn;
     board[rowColToSquare(3, 3)] = .black_pawn;
     board[rowColToSquare(5, 5)] = .black_pawn;
@@ -394,7 +394,7 @@ test "multi-jump chain records both captured squares" {
 }
 
 test "promotion: pawn reaching last row becomes king" {
-    var board: Board32 = [_]Piece{.empty} ** 32;
+    var board: Board32 = @as([32]Piece, @splat(.empty));
     board[rowColToSquare(6, 6)] = .white_pawn;
 
     var moves = MoveList{};
@@ -408,7 +408,7 @@ test "promotion: pawn reaching last row becomes king" {
 }
 
 test "king moves backward" {
-    var board: Board32 = [_]Piece{.empty} ** 32;
+    var board: Board32 = @as([32]Piece, @splat(.empty));
     board[rowColToSquare(4, 4)] = .white_king;
 
     var moves = MoveList{};
@@ -422,7 +422,7 @@ test "king moves backward" {
 }
 
 test "applyMove removes captured pieces and promotes" {
-    var board: Board32 = [_]Piece{.empty} ** 32;
+    var board: Board32 = @as([32]Piece, @splat(.empty));
     board[rowColToSquare(2, 2)] = .white_pawn;
     board[rowColToSquare(3, 3)] = .black_pawn;
     board[rowColToSquare(5, 5)] = .black_pawn;
@@ -439,29 +439,29 @@ test "applyMove removes captured pieces and promotes" {
 }
 
 test "isLegalMove accepts legal and rejects illegal moves" {
-    var board: Board32 = [_]Piece{.empty} ** 32;
+    var board: Board32 = @as([32]Piece, @splat(.empty));
     board[rowColToSquare(2, 2)] = .white_pawn;
     board[rowColToSquare(3, 3)] = .black_pawn;
 
     // Legal capture.
-    const legal = Move{ .from = rowColToSquare(2, 2), .to = rowColToSquare(4, 4), .captured = [_]u8{rowColToSquare(3, 3)} ** 12, .num_captured = 1 };
+    const legal = Move{ .from = rowColToSquare(2, 2), .to = rowColToSquare(4, 4), .captured = @as([12]u8, @splat(rowColToSquare(3, 3))), .num_captured = 1 };
     try std.testing.expect(isLegalMove(board, .white, legal, .english));
 
     // Wrong turn: same move claimed for black.
     try std.testing.expect(!isLegalMove(board, .black, legal, .english));
 
     // Non-diagonal move.
-    const non_diag = Move{ .from = rowColToSquare(2, 2), .to = rowColToSquare(2, 4), .captured = [_]u8{0} ** 12, .num_captured = 0 };
+    const non_diag = Move{ .from = rowColToSquare(2, 2), .to = rowColToSquare(2, 4), .captured = @as([12]u8, @splat(0)), .num_captured = 0 };
     try std.testing.expect(!isLegalMove(board, .white, non_diag, .english));
 
     // Jumping own piece: white at (2,2), white at (3,3), empty (4,4).
     board[rowColToSquare(3, 3)] = .white_pawn;
-    const own_jump = Move{ .from = rowColToSquare(2, 2), .to = rowColToSquare(4, 4), .captured = [_]u8{rowColToSquare(3, 3)} ** 12, .num_captured = 1 };
+    const own_jump = Move{ .from = rowColToSquare(2, 2), .to = rowColToSquare(4, 4), .captured = @as([12]u8, @splat(rowColToSquare(3, 3))), .num_captured = 1 };
     try std.testing.expect(!isLegalMove(board, .white, own_jump, .english));
 }
 
 test "pawn does not capture backward (both variants)" {
-    var board: Board32 = [_]Piece{.empty} ** 32;
+    var board: Board32 = @as([32]Piece, @splat(.empty));
     board[rowColToSquare(3, 3)] = .white_pawn;
     board[rowColToSquare(2, 2)] = .black_pawn; // behind white's forward direction
 
@@ -486,7 +486,7 @@ test "pawn does not capture backward (both variants)" {
 }
 
 test "english: king captures backward" {
-    var kboard: Board32 = [_]Piece{.empty} ** 32;
+    var kboard: Board32 = @as([32]Piece, @splat(.empty));
     kboard[rowColToSquare(3, 3)] = .white_king;
     kboard[rowColToSquare(2, 2)] = .black_pawn;
     var king_moves = MoveList{};
@@ -503,7 +503,7 @@ test "english: pawn in a chain captures forward only" {
     // and must NOT continue on to (4,6): that would be a backward capture,
     // which English pawns never make (the pre-fix code continued chains with
     // all four directions, ending at (3,7) with 2 captures).
-    var board: Board32 = [_]Piece{.empty} ** 32;
+    var board: Board32 = @as([32]Piece, @splat(.empty));
     board[rowColToSquare(3, 3)] = .white_pawn;
     board[rowColToSquare(4, 4)] = .black_pawn;
     board[rowColToSquare(4, 6)] = .black_pawn;
@@ -521,7 +521,7 @@ test "black pawn does not capture backward" {
     // BP(3,3), WP(4,4) behind black's forward direction (black moves up,
     // row -1). Expect the 2 forward quiet moves to row 2; a backward
     // capture regression would land on (5,5), row 5.
-    var board: Board32 = [_]Piece{.empty} ** 32;
+    var board: Board32 = @as([32]Piece, @splat(.empty));
     board[rowColToSquare(3, 3)] = .black_pawn;
     board[rowColToSquare(4, 4)] = .white_pawn;
 
@@ -535,7 +535,7 @@ test "black pawn does not capture backward" {
 }
 
 test "spanish: flying king quiet moves slide the full diagonal" {
-    var board: Board32 = [_]Piece{.empty} ** 32;
+    var board: Board32 = @as([32]Piece, @splat(.empty));
     board[rowColToSquare(4, 4)] = .white_king;
 
     var moves = MoveList{};
@@ -554,7 +554,7 @@ test "spanish: flying king quiet moves slide the full diagonal" {
 }
 
 test "spanish: flying king captures the square beyond the enemy" {
-    var board: Board32 = [_]Piece{.empty} ** 32;
+    var board: Board32 = @as([32]Piece, @splat(.empty));
     board[rowColToSquare(4, 4)] = .white_king;
     board[rowColToSquare(6, 6)] = .black_pawn;
 
@@ -569,7 +569,7 @@ test "spanish: flying king captures the square beyond the enemy" {
 }
 
 test "spanish: flying king may land on any free square beyond the enemy" {
-    var board: Board32 = [_]Piece{.empty} ** 32;
+    var board: Board32 = @as([32]Piece, @splat(.empty));
     board[rowColToSquare(1, 1)] = .white_king;
     board[rowColToSquare(3, 3)] = .black_pawn;
 
@@ -589,7 +589,7 @@ test "spanish: flying king may land on any free square beyond the enemy" {
 }
 
 test "spanish: flying king multi-capture chain" {
-    var board: Board32 = [_]Piece{.empty} ** 32;
+    var board: Board32 = @as([32]Piece, @splat(.empty));
     board[rowColToSquare(4, 4)] = .white_king;
     board[rowColToSquare(3, 3)] = .black_pawn;
     board[rowColToSquare(1, 1)] = .black_pawn;
@@ -605,7 +605,7 @@ test "spanish: flying king multi-capture chain" {
 }
 
 test "spanish: ley de la cantidad keeps only the longest chains" {
-    var board: Board32 = [_]Piece{.empty} ** 32;
+    var board: Board32 = @as([32]Piece, @splat(.empty));
     // Single capture: (0,0) -> (2,2) over (1,1).
     board[rowColToSquare(0, 0)] = .white_pawn;
     board[rowColToSquare(1, 1)] = .black_pawn;
@@ -624,7 +624,7 @@ test "spanish: ley de la cantidad keeps only the longest chains" {
 }
 
 test "spanish: ley de la calidad prefers chains capturing more kings" {
-    var board: Board32 = [_]Piece{.empty} ** 32;
+    var board: Board32 = @as([32]Piece, @splat(.empty));
     // Chain with a king: (0,0) -> (4,4) over king (1,1), pawn (3,3).
     board[rowColToSquare(0, 0)] = .white_pawn;
     board[rowColToSquare(1, 1)] = .black_king;
@@ -644,7 +644,7 @@ test "spanish: ley de la calidad prefers chains capturing more kings" {
 }
 
 test "spanish: ley de la cantidad outranks quality" {
-    var board: Board32 = [_]Piece{.empty} ** 32;
+    var board: Board32 = @as([32]Piece, @splat(.empty));
     // Chain of one king: (0,0) -> (2,2) over king (1,1).
     board[rowColToSquare(0, 0)] = .white_pawn;
     board[rowColToSquare(1, 1)] = .black_king;
@@ -666,7 +666,7 @@ test "spanish: own piece blocks the king's slide" {
     // stops at the own pawn, so the king never captures (6,6). Note: the own
     // pawn itself captures (6,6) forward (captures are mandatory), so the
     // position yields one capture — by the pawn, never by the king.
-    var board: Board32 = [_]Piece{.empty} ** 32;
+    var board: Board32 = @as([32]Piece, @splat(.empty));
     board[rowColToSquare(4, 4)] = .white_king;
     board[rowColToSquare(5, 5)] = .white_pawn;
     board[rowColToSquare(6, 6)] = .black_pawn;
@@ -689,7 +689,7 @@ test "spanish: own piece blocks the landing" {
     // but cannot land beyond it: (6,6) is its own pawn, so there is no
     // capture at all. The king still slides 10 quiet moves; the pawn adds 2
     // quiet moves of its own (total 12).
-    var board: Board32 = [_]Piece{.empty} ** 32;
+    var board: Board32 = @as([32]Piece, @splat(.empty));
     board[rowColToSquare(4, 4)] = .white_king;
     board[rowColToSquare(5, 5)] = .black_pawn;
     board[rowColToSquare(6, 6)] = .white_pawn;
@@ -711,7 +711,7 @@ test "spanish: flying king continues on another diagonal after landing" {
     // then continues on the (1,-1) diagonal: captures (6,4) landing on (7,3).
     // The shorter chains (landing (6,6)/(7,7), 1 capture) lose to this
     // 2-capture chain by the ley de la cantidad.
-    var board: Board32 = [_]Piece{.empty} ** 32;
+    var board: Board32 = @as([32]Piece, @splat(.empty));
     board[rowColToSquare(3, 3)] = .white_king;
     board[rowColToSquare(4, 4)] = .black_pawn;
     board[rowColToSquare(6, 4)] = .black_pawn;
@@ -736,7 +736,7 @@ test "spanish: chain never re-lands on the origin" {
     // gives the 3 chains ending on (2,2)/(1,1)/(0,0). Total 4. Assert the
     // relevant properties: all chains capture 2 pieces, at least one ends on
     // (7,7), none on (4,4).
-    var board: Board32 = [_]Piece{.empty} ** 32;
+    var board: Board32 = @as([32]Piece, @splat(.empty));
     board[rowColToSquare(4, 4)] = .white_king;
     board[rowColToSquare(3, 3)] = .black_pawn;
     board[rowColToSquare(6, 6)] = .black_pawn;
@@ -757,7 +757,7 @@ test "english: promotion ends the capture chain" {
     // WP(5,3), BP(6,4), BP(6,6). The pawn captures (6,4) and lands on row 7
     // (promotion), which ends the move: it must NOT continue on to capture
     // (6,6). Same promotion rule in both variants.
-    var board: Board32 = [_]Piece{.empty} ** 32;
+    var board: Board32 = @as([32]Piece, @splat(.empty));
     board[rowColToSquare(5, 3)] = .white_pawn;
     board[rowColToSquare(6, 4)] = .black_pawn;
     board[rowColToSquare(6, 6)] = .black_pawn;
@@ -777,7 +777,7 @@ test "spanish: pawn in a chain captures forward only" {
     // which Spanish pawns never make (the pre-fix code continued chains with
     // all four directions, ending at (3,7) with 2 captures). Exactly one
     // 1-capture chain exists here, so the capture laws don't filter it.
-    var board: Board32 = [_]Piece{.empty} ** 32;
+    var board: Board32 = @as([32]Piece, @splat(.empty));
     board[rowColToSquare(3, 3)] = .white_pawn;
     board[rowColToSquare(4, 4)] = .black_pawn;
     board[rowColToSquare(4, 6)] = .black_pawn;
