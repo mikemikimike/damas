@@ -463,7 +463,7 @@ fn pieceValue(piece: Piece) i32 {
 }
 
 test "forced capture is found" {
-    var board: Board32 = [_]Piece{.empty} ** 32;
+    var board: Board32 = @as([32]Piece, @splat(.empty));
     board[board_mod.rowColToSquare(2, 2)] = .white_pawn;
     board[board_mod.rowColToSquare(3, 3)] = .black_pawn;
     const result = try searchDepth(board, .white, 3, std.testing.allocator, .english, .{});
@@ -471,7 +471,7 @@ test "forced capture is found" {
 }
 
 test "material advantage evaluates positive" {
-    var board: Board32 = [_]Piece{.empty} ** 32;
+    var board: Board32 = @as([32]Piece, @splat(.empty));
     board[board_mod.rowColToSquare(2, 2)] = .white_pawn;
     board[board_mod.rowColToSquare(3, 3)] = .black_pawn;
     board[board_mod.rowColToSquare(5, 5)] = .white_pawn;
@@ -514,7 +514,7 @@ test "initial position search returns a legal move" {
 }
 
 test "deeper search finds at least as good a score" {
-    var board: Board32 = [_]Piece{.empty} ** 32;
+    var board: Board32 = @as([32]Piece, @splat(.empty));
     board[board_mod.rowColToSquare(2, 2)] = .white_pawn;
     board[board_mod.rowColToSquare(3, 3)] = .black_pawn;
     board[board_mod.rowColToSquare(5, 5)] = .black_pawn;
@@ -524,7 +524,7 @@ test "deeper search finds at least as good a score" {
 }
 
 test "promotion move is found when it is the only move" {
-    var board: Board32 = [_]Piece{.empty} ** 32;
+    var board: Board32 = @as([32]Piece, @splat(.empty));
     board[board_mod.rowColToSquare(6, 6)] = .white_pawn;
     const result = try searchDepth(board, .white, 2, std.testing.allocator, .english, .{});
     const rc = board_mod.squareToRowCol(result.move.to);
@@ -551,11 +551,11 @@ fn sidePositional(board: Board32, variant: Variant, color: Color) i32 {
 test "evaluate is antisymmetric in turn" {
     var b1: Board32 = undefined;
     b1 = board_mod.initialBoard();
-    var b2: Board32 = [_]Piece{.empty} ** 32;
+    var b2: Board32 = @as([32]Piece, @splat(.empty));
     b2[board_mod.rowColToSquare(4, 4)] = .white_king;
     b2[board_mod.rowColToSquare(0, 0)] = .black_king;
     b2[board_mod.rowColToSquare(7, 7)] = .black_king;
-    var b3: Board32 = [_]Piece{.empty} ** 32;
+    var b3: Board32 = @as([32]Piece, @splat(.empty));
     b3[board_mod.rowColToSquare(5, 5)] = .white_pawn;
     b3[board_mod.rowColToSquare(4, 2)] = .white_pawn;
     b3[board_mod.rowColToSquare(2, 4)] = .black_pawn;
@@ -574,25 +574,25 @@ test "evaluate: blocked diagonals change the mobility term" {
     // Same material (one king each). `blocked` corners the black king (1
     // destination vs 4), flipping the white-black mobility balance from 0 to
     // +9 — mobility is the only term that differs.
-    var blocked: Board32 = [_]Piece{.empty} ** 32;
+    var blocked: Board32 = @as([32]Piece, @splat(.empty));
     blocked[board_mod.rowColToSquare(4, 4)] = .white_king;
     blocked[board_mod.rowColToSquare(7, 7)] = .black_king;
-    var open: Board32 = [_]Piece{.empty} ** 32;
+    var open: Board32 = @as([32]Piece, @splat(.empty));
     open[board_mod.rowColToSquare(4, 4)] = .white_king;
     open[board_mod.rowColToSquare(1, 1)] = .black_king;
     try std.testing.expect(evaluate(blocked, .white, .english) > evaluate(open, .white, .english));
 }
 
 test "evaluate: spanish king scores higher than english king" {
-    var board: Board32 = [_]Piece{.empty} ** 32;
+    var board: Board32 = @as([32]Piece, @splat(.empty));
     board[board_mod.rowColToSquare(4, 4)] = .white_king;
     try std.testing.expect(evaluate(board, .white, .spanish) > evaluate(board, .white, .english));
 }
 
 test "evaluate: penultimate-row man gets the promo bonus" {
-    var near: Board32 = [_]Piece{.empty} ** 32;
+    var near: Board32 = @as([32]Piece, @splat(.empty));
     near[board_mod.rowColToSquare(6, 6)] = .white_pawn;
-    var far: Board32 = [_]Piece{.empty} ** 32;
+    var far: Board32 = @as([32]Piece, @splat(.empty));
     far[board_mod.rowColToSquare(5, 5)] = .white_pawn;
     try std.testing.expect(evaluate(near, .white, .english) > evaluate(far, .white, .english));
 }
@@ -601,10 +601,10 @@ test "evaluate: edge man blocked behind an own piece is a perro" {
     // Identical material (a row-0 and a row-1 white pawn). In `blocked` the
     // (0,0) man has no forward move and no capture ((1,1) is own) → perro;
     // in `open` (1,1) is clear and the man moves freely.
-    var blocked: Board32 = [_]Piece{.empty} ** 32;
+    var blocked: Board32 = @as([32]Piece, @splat(.empty));
     blocked[board_mod.rowColToSquare(0, 0)] = .white_pawn;
     blocked[board_mod.rowColToSquare(1, 1)] = .white_pawn;
-    var open: Board32 = [_]Piece{.empty} ** 32;
+    var open: Board32 = @as([32]Piece, @splat(.empty));
     open[board_mod.rowColToSquare(0, 0)] = .white_pawn;
     open[board_mod.rowColToSquare(1, 3)] = .white_pawn;
     try std.testing.expect(evaluate(blocked, .white, .english) < evaluate(open, .white, .english));
@@ -616,7 +616,7 @@ test "evaluate: a legal forward capture rescues an edge man from perro" {
     // move); a backward enemy B(3,1) leaves it a perro — identical in
     // English and Spanish (old code scored english > spanish here because
     // the eval re-implemented the backward-capture bug).
-    var backward_enemy: Board32 = [_]Piece{.empty} ** 32;
+    var backward_enemy: Board32 = @as([32]Piece, @splat(.empty));
     backward_enemy[board_mod.rowColToSquare(4, 0)] = .white_pawn;
     backward_enemy[board_mod.rowColToSquare(5, 1)] = .white_pawn;
     backward_enemy[board_mod.rowColToSquare(3, 1)] = .black_pawn;
@@ -625,7 +625,7 @@ test "evaluate: a legal forward capture rescues an edge man from perro" {
     // A forward enemy with an empty landing rescues the man — identically
     // in both variants. Same material as backward_enemy (2 white, 1 black),
     // so the rescue signal is comparable.
-    var forward_capture: Board32 = [_]Piece{.empty} ** 32;
+    var forward_capture: Board32 = @as([32]Piece, @splat(.empty));
     forward_capture[board_mod.rowColToSquare(4, 0)] = .white_pawn;
     forward_capture[board_mod.rowColToSquare(5, 1)] = .black_pawn;
     forward_capture[board_mod.rowColToSquare(2, 2)] = .white_pawn;
@@ -638,19 +638,19 @@ test "evaluate: positional terms stay under one pawn per side" {
     // perros (-123/side: -120 structure + 7 mobility) legitimately exceed
     // one pawn, and it is covered by the exact-value regression instead.
     const Pos = struct { board: Board32, variant: Variant };
-    var mat: Board32 = [_]Piece{.empty} ** 32;
+    var mat: Board32 = @as([32]Piece, @splat(.empty));
     mat[board_mod.rowColToSquare(2, 2)] = .white_pawn;
     mat[board_mod.rowColToSquare(4, 4)] = .white_pawn;
     mat[board_mod.rowColToSquare(6, 6)] = .black_pawn;
-    var mob: Board32 = [_]Piece{.empty} ** 32;
+    var mob: Board32 = @as([32]Piece, @splat(.empty));
     mob[board_mod.rowColToSquare(2, 2)] = .white_pawn;
     mob[board_mod.rowColToSquare(5, 7)] = .black_pawn;
-    var promo: Board32 = [_]Piece{.empty} ** 32;
+    var promo: Board32 = @as([32]Piece, @splat(.empty));
     promo[board_mod.rowColToSquare(6, 6)] = .white_pawn;
-    var perro: Board32 = [_]Piece{.empty} ** 32;
+    var perro: Board32 = @as([32]Piece, @splat(.empty));
     perro[board_mod.rowColToSquare(0, 0)] = .white_pawn;
     perro[board_mod.rowColToSquare(1, 1)] = .white_pawn;
-    var kings: Board32 = [_]Piece{.empty} ** 32;
+    var kings: Board32 = @as([32]Piece, @splat(.empty));
     kings[board_mod.rowColToSquare(4, 4)] = .white_king;
     kings[board_mod.rowColToSquare(0, 0)] = .black_king;
     kings[board_mod.rowColToSquare(7, 7)] = .black_king;
@@ -673,19 +673,19 @@ test "evaluate: quiet-position regression (exact values)" {
     const Pos = struct { board: Board32, variant: Variant, expected: i32 };
     var initial: Board32 = undefined;
     initial = board_mod.initialBoard();
-    var mat: Board32 = [_]Piece{.empty} ** 32;
+    var mat: Board32 = @as([32]Piece, @splat(.empty));
     mat[board_mod.rowColToSquare(2, 2)] = .white_pawn;
     mat[board_mod.rowColToSquare(4, 4)] = .white_pawn;
     mat[board_mod.rowColToSquare(6, 6)] = .black_pawn;
-    var mob: Board32 = [_]Piece{.empty} ** 32;
+    var mob: Board32 = @as([32]Piece, @splat(.empty));
     mob[board_mod.rowColToSquare(2, 2)] = .white_pawn;
     mob[board_mod.rowColToSquare(5, 7)] = .black_pawn;
-    var promo: Board32 = [_]Piece{.empty} ** 32;
+    var promo: Board32 = @as([32]Piece, @splat(.empty));
     promo[board_mod.rowColToSquare(6, 6)] = .white_pawn;
-    var perro: Board32 = [_]Piece{.empty} ** 32;
+    var perro: Board32 = @as([32]Piece, @splat(.empty));
     perro[board_mod.rowColToSquare(0, 0)] = .white_pawn;
     perro[board_mod.rowColToSquare(1, 1)] = .white_pawn;
-    var king: Board32 = [_]Piece{.empty} ** 32;
+    var king: Board32 = @as([32]Piece, @splat(.empty));
     king[board_mod.rowColToSquare(4, 4)] = .white_king;
     const cases = [_]Pos{
         .{ .board = initial, .variant = .english, .expected = 0 }, // symmetric: material and corner perros cancel
@@ -705,7 +705,7 @@ test "evaluate: promotion race picks the racing man at shallow depth" {
     // first. The old eval (row advance only) ties between pushing (5,5) and
     // shuffling (4,2) at depth 2; the +40 promo bonus breaks the tie toward
     // the racing man at depth 3.
-    var board: Board32 = [_]Piece{.empty} ** 32;
+    var board: Board32 = @as([32]Piece, @splat(.empty));
     board[board_mod.rowColToSquare(5, 5)] = .white_pawn;
     board[board_mod.rowColToSquare(4, 2)] = .white_pawn;
     board[board_mod.rowColToSquare(2, 4)] = .black_pawn;
@@ -721,7 +721,7 @@ test "stalemate is a draw, not a mate (issue #28)" {
     // pawns at (1,1) and (0,2), each blocking the other's only forward
     // squares: black has pieces but zero legal moves -> stalemate -> draw.
     // The old code mis-scored this as +MATE for white; it must be exactly 0.
-    var board: Board32 = [_]Piece{.empty} ** 32;
+    var board: Board32 = @as([32]Piece, @splat(.empty));
     board[board_mod.rowColToSquare(2, 0)] = .white_pawn;
     board[board_mod.rowColToSquare(0, 0)] = .black_king;
     board[board_mod.rowColToSquare(1, 1)] = .black_pawn;
@@ -739,7 +739,7 @@ test "80-ply draw clock ends quiet shuffling (issue #28)" {
     // pawn, (5,3) is empty; black (1,1)'s forward (0,0)/(0,2) are empty), and
     // black (1,1) is mobile, so black is not stalemated: the exact 0 comes
     // from the clock short-circuit, not the stalemate terminal.
-    var board: Board32 = [_]Piece{.empty} ** 32;
+    var board: Board32 = @as([32]Piece, @splat(.empty));
     board[board_mod.rowColToSquare(4, 4)] = .white_pawn;
     board[board_mod.rowColToSquare(5, 5)] = .white_pawn;
     board[board_mod.rowColToSquare(1, 1)] = .black_pawn;
@@ -751,7 +751,7 @@ test "80-ply draw clock ends quiet shuffling (issue #28)" {
     // the search must play the mandatory capture (2,2)x(3,3)->(4,4). The
     // surviving black king at (0,0) can still move to (1,1) afterwards, so
     // black is not stalemated and the position scores positive for white.
-    var cap_board: Board32 = [_]Piece{.empty} ** 32;
+    var cap_board: Board32 = @as([32]Piece, @splat(.empty));
     cap_board[board_mod.rowColToSquare(2, 2)] = .white_king;
     cap_board[board_mod.rowColToSquare(3, 3)] = .black_pawn;
     cap_board[board_mod.rowColToSquare(0, 0)] = .black_king;
@@ -767,14 +767,14 @@ test "3-fold repetition via game history is a draw (issue #28)" {
     // history already contains the position after white's shuffle move
     // (4,2)->(3,1) twice, so playing it a third time is a 3-fold draw — the
     // only non-negative result — and the search must score it exactly 0.
-    var board: Board32 = [_]Piece{.empty} ** 32;
+    var board: Board32 = @as([32]Piece, @splat(.empty));
     board[board_mod.rowColToSquare(4, 2)] = .white_king;
     board[board_mod.rowColToSquare(4, 6)] = .black_king;
     board[board_mod.rowColToSquare(6, 6)] = .black_pawn;
 
     var history = std.AutoHashMap(u64, u8).init(std.testing.allocator);
     defer history.deinit();
-    var child: Board32 = [_]Piece{.empty} ** 32;
+    var child: Board32 = @as([32]Piece, @splat(.empty));
     child[board_mod.rowColToSquare(3, 1)] = .white_king;
     child[board_mod.rowColToSquare(4, 6)] = .black_king;
     child[board_mod.rowColToSquare(6, 6)] = .black_pawn;
@@ -796,7 +796,7 @@ test "3-fold repetition via game history is a draw (issue #28)" {
 }
 
 test "searchDepth clamps depth above MAX_DEPTH" {
-    var board: Board32 = [_]Piece{.empty} ** 32;
+    var board: Board32 = @as([32]Piece, @splat(.empty));
     board[board_mod.rowColToSquare(4, 2)] = .white_king;
     board[board_mod.rowColToSquare(4, 6)] = .black_king;
 
@@ -805,7 +805,7 @@ test "searchDepth clamps depth above MAX_DEPTH" {
 }
 
 test "clock increment saturates in search near u16 max" {
-    var board: Board32 = [_]Piece{.empty} ** 32;
+    var board: Board32 = @as([32]Piece, @splat(.empty));
     board[board_mod.rowColToSquare(4, 2)] = .white_king;
     board[board_mod.rowColToSquare(4, 6)] = .black_king;
     const state = SearchState{ .halfmove_clock = std.math.maxInt(u16) };
