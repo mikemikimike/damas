@@ -143,7 +143,7 @@ fn fakeResp(m: move_mod.Move, reasoning: []const u8) provider.Response {
 
 /// A move that is not in any legal list used by these tests.
 fn noMove(from: u8, to: u8) move_mod.Move {
-    return .{ .from = from, .to = to, .captured = [_]u8{0} ** 12, .num_captured = 0 };
+    return .{ .from = from, .to = to, .captured = @as([12]u8, @splat(0)), .num_captured = 0 };
 }
 
 fn initialLegalMoves(allocator: std.mem.Allocator) !struct { board: board_mod.Board32, list: move_mod.MoveList } {
@@ -216,7 +216,7 @@ test "validation: provider's resolved move is returned unchanged" {
     // authoritative: the fake resolves to m2, and validation must NOT
     // replace it with the first from/to match (m1).
     const m1 = move_mod.Move{ .from = 9, .to = 18, .captured = [_]u8{ 13, 17, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, .num_captured = 2 };
-    const m2 = move_mod.Move{ .from = 9, .to = 18, .captured = [_]u8{0} ** 12, .num_captured = 0 };
+    const m2 = move_mod.Move{ .from = 9, .to = 18, .captured = @as([12]u8, @splat(0)), .num_captured = 0 };
     const legal = [_]move_mod.Move{ m1, m2 };
 
     var ctx = FakeCtx{ .responses = &.{fakeResp(m2, "number 1, the quiet one")} };
@@ -232,8 +232,8 @@ test "prompt builder: board, move list, and number-based reply instruction" {
     const allocator = std.testing.allocator;
     const ascii = board_mod.boardToAscii(board_mod.initialBoard());
     const moves = [_]move_mod.Move{
-        .{ .from = 8, .to = 12, .captured = [_]u8{0} ** 12, .num_captured = 0 },
-        .{ .from = 9, .to = 13, .captured = [_]u8{0} ** 12, .num_captured = 0 },
+        .{ .from = 8, .to = 12, .captured = @as([12]u8, @splat(0)), .num_captured = 0 },
+        .{ .from = 9, .to = 13, .captured = @as([12]u8, @splat(0)), .num_captured = 0 },
     };
 
     const prompt = try provider.buildPrompt(allocator, &ascii, &moves, "");
@@ -255,9 +255,9 @@ test "prompt builder: board, move list, and number-based reply instruction" {
 /// Canned legal-move list for response-parsing tests (3 entries so move
 /// number 2 is in range).
 const test_moves = [_]move_mod.Move{
-    .{ .from = 8, .to = 12, .captured = [_]u8{0} ** 12, .num_captured = 0 },
-    .{ .from = 9, .to = 13, .captured = [_]u8{0} ** 12, .num_captured = 0 },
-    .{ .from = 10, .to = 14, .captured = [_]u8{0} ** 12, .num_captured = 0 },
+    .{ .from = 8, .to = 12, .captured = @as([12]u8, @splat(0)), .num_captured = 0 },
+    .{ .from = 9, .to = 13, .captured = @as([12]u8, @splat(0)), .num_captured = 0 },
+    .{ .from = 10, .to = 14, .captured = @as([12]u8, @splat(0)), .num_captured = 0 },
 };
 
 test "openai.parseChatResponse: valid move numbers" {
