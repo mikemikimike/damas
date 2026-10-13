@@ -40,7 +40,7 @@ pub fn hash(board: Board32, turn: Color) u64 {
     var h: u64 = 0;
     for (0..32) |sq| {
         const p = board[sq];
-        if (p != .empty) h ^= table[sq][@intFromEnum(p)];
+        if (p != .empty) h ^= table[sq][@backingInt(p)];
     }
     if (turn == .black) h ^= turn_hash;
     // Key 0 is the TT empty-slot marker; never hand a position hash of 0 to
@@ -63,7 +63,7 @@ pub fn updateHash(pre_board: Board32, move: Move, parent_hash: u64) u64 {
     // both removes it and adds the child's (opponent's) copy.
     h ^= turn_hash;
     const piece = pre_board[move.from];
-    h ^= table[move.from][@intFromEnum(piece)];
+    h ^= table[move.from][@backingInt(piece)];
     // Final piece on `to`: mirrors rules.applyMove (promotion on landing).
     var final_piece = piece;
     const rc = board_mod.squareToRowCol(move.to);
@@ -72,10 +72,10 @@ pub fn updateHash(pre_board: Board32, move: Move, parent_hash: u64) u64 {
     } else if (piece == .black_pawn and rc.row == 0) {
         final_piece = .black_king;
     }
-    h ^= table[move.to][@intFromEnum(final_piece)];
+    h ^= table[move.to][@backingInt(final_piece)];
     for (0..move.num_captured) |i| {
         const cap_sq = move.captured[i];
-        h ^= table[cap_sq][@intFromEnum(pre_board[cap_sq])];
+        h ^= table[cap_sq][@backingInt(pre_board[cap_sq])];
     }
     if (h == 0) h = 1;
     return h;

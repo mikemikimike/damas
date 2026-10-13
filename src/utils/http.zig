@@ -58,7 +58,7 @@ pub fn postJson(
     const duped_headers = dupHeaders(headers) catch return error.HttpTimeout;
     const shared = std.heap.page_allocator.create(Shared) catch return error.HttpTimeout;
     shared.* = .{
-        .phase = std.atomic.Value(u8).init(@intFromEnum(Phase.connecting)),
+        .phase = std.atomic.Value(u8).init(@backingInt(Phase.connecting)),
         .result = .{},
         .url = std.heap.page_allocator.dupe(u8, url) catch return error.HttpTimeout,
         .headers = duped_headers,
@@ -72,11 +72,11 @@ pub fn postJson(
     };
 
     // Wait for TCP/TLS connect, then for the response.
-    if (!waitForPhase(io, shared, @intFromEnum(Phase.connected), CONNECT_TIMEOUT_MS)) {
+    if (!waitForPhase(io, shared, @backingInt(Phase.connected), CONNECT_TIMEOUT_MS)) {
         t.detach(); // ponytail: worker + shared leak — it can't be canceled
         return error.HttpTimeout;
     }
-    if (!waitForPhase(io, shared, @intFromEnum(Phase.done), READ_TIMEOUT_MS)) {
+    if (!waitForPhase(io, shared, @backingInt(Phase.done), READ_TIMEOUT_MS)) {
         t.detach();
         return error.HttpTimeout;
     }
@@ -94,21 +94,21 @@ fn worker(io: std.Io, shared: *Shared) void {
 
     const uri = std.Uri.parse(shared.url) catch {
         shared.result.err = error.InvalidUri;
-        shared.phase.store(@intFromEnum(Phase.done), .release);
+        shared.phase.store(@backingInt(Phase.done), .release);
         return;
     };
     var req = client.request(.POST, uri, .{ .extra_headers = shared.headers }) catch |err| {
         shared.result.err = err;
-        shared.phase.store(@intFromEnum(Phase.done), .release);
+        shared.phase.store(@backingInt(Phase.done), .release);
         return;
     };
     defer req.deinit();
     // Connected: the caller's connect deadline stops here.
-    shared.phase.store(@intFromEnum(Phase.connected), .release);
+    shared.phase.store(@backingInt(Phase.connected), .release);
 
     req.sendBodyComplete(shared.body) catch |err| {
         shared.result.err = err;
-        shared.phase.store(@intFromEnum(Phase.done), .release);
+        shared.phase.store(@backingInt(Phase.done), .release);
         return;
     };
 
@@ -118,17 +118,17 @@ fn worker(io: std.Io, shared: *Shared) void {
     // POSTs, so the bearer key never leaves the trusted endpoint; acceptable.
     var resp = req.receiveHead(&redirect_buf) catch |err| {
         shared.result.err = err;
-        shared.phase.store(@intFromEnum(Phase.done), .release);
+        shared.phase.store(@backingInt(Phase.done), .release);
         return;
     };
 
     const status = resp.head.status;
     if (status.class() != .success) {
         std.debug.print("postJson {s}: status {d} {s}\n", .{
-            shared.url, @intFromEnum(status), status.phrase() orelse "",
+            shared.url, @backingInt(status), status.phrase() orelse "",
         });
         shared.result.err = error.HttpStatus;
-        shared.phase.store(@intFromEnum(Phase.done), .release);
+        shared.phase.store(@backingInt(Phase.done), .release);
         return;
     }
 
@@ -141,10 +141,10 @@ fn worker(io: std.Io, shared: *Shared) void {
     var reader = resp.readerDecompressing(&transfer_buf, &decompress, &decompress_buf);
     shared.result.body = reader.allocRemaining(allocator, .limited(0x100000)) catch |err| {
         shared.result.err = err;
-        shared.phase.store(@intFromEnum(Phase.done), .release);
+        shared.phase.store(@backingInt(Phase.done), .release);
         return;
     };
-    shared.phase.store(@intFromEnum(Phase.done), .release);
+    shared.phase.store(@backingInt(Phase.done), .release);
 }
 
 fn waitForPhase(io: std.Io, shared: *Shared, min: u8, timeout_ms: u64) bool {
