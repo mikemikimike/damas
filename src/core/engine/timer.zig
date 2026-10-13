@@ -32,7 +32,7 @@ fn nowMillis() i64 {
         return @as(i64, @intFromFloat(dz_now_ms()));
     }
     // Windows: QueryPerformanceCounter/Frequency (same pair the stdlib uses).
-    if (builtin.os.tag == .windows) {
+    if (builtin.target.os.tag == .windows) {
         var qpc: std.os.windows.LARGE_INTEGER = undefined;
         var qpf: std.os.windows.LARGE_INTEGER = undefined;
         if (!std.os.windows.ntdll.RtlQueryPerformanceCounter(&qpc).toBool()) return 0;
@@ -44,7 +44,7 @@ fn nowMillis() i64 {
     }
     // Same mapping the stdlib uses (std.Io.Threaded.clockToPosix): UPTIME_RAW
     // on darwin-family, MONOTONIC elsewhere.
-    const clock_id: std.posix.clockid_t = switch (builtin.os.tag) {
+    const clock_id: std.posix.clockid_t = switch (builtin.target.os.tag) {
         .driverkit, .ios, .maccatalyst, .macos, .tvos, .visionos, .watchos => .UPTIME_RAW,
         else => .MONOTONIC,
     };
