@@ -83,6 +83,7 @@ fn postJsonWithTimeouts(
     };
 
     const t = std.Thread.spawn(.{}, worker, .{ io, shared }) catch {
+        // The worker never ran, so its reference is still ours to drop.
         releaseShared(shared);
         releaseShared(shared);
         return error.HttpTimeout;
