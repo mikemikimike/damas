@@ -1,7 +1,8 @@
 //! Test aggregator for the LLM layer (config, validation, prompt building,
 //! response parsing). Module root must be src/ so that the imports resolve.
-//! No network: providers are compile-checked and exercised via fake vtables
-//! and canned response bodies.
+//! No external network: providers are compile-checked and exercised via fake
+//! vtables and canned response bodies. The request-allocator test opens one
+//! loopback server of its own.
 
 const std = @import("std");
 const board_mod = @import("core/board.zig");
