@@ -40,22 +40,6 @@ const Shared = struct {
 var completed_shared_count = std.atomic.Value(usize).init(0);
 var completed_response_count = std.atomic.Value(usize).init(0);
 
-// Timed-out workers can overlap later requests, so keep a thread-safe I/O
-// context alive for the process lifetime.
-const HttpIoState = enum(u8) { uninitialized, initializing, ready };
-var http_io_state = std.atomic.Value(HttpIoState).init(.uninitialized);
-var http_io_threaded: std.Io.Threaded = .init_single_threaded;
-
-fn httpIo() std.Io {
-    if (http_io_state.cmpxchgStrong(.uninitialized, .initializing, .acq_rel, .monotonic) == null) {
-        http_io_threaded = .init(std.heap.page_allocator, .{});
-        http_io_state.store(.ready, .release);
-    } else {
-        while (http_io_state.load(.acquire) != .ready) std.atomic.spinLoopHint();
-    }
-    return http_io_threaded.io();
-}
-
 /// POST `body` to `url` with the given headers and return the response body
 /// (caller owns). Non-2xx status -> error.HttpStatus (status printed).
 /// A hang (connect or read) -> error.HttpTimeout after the deadlines above.
@@ -76,7 +60,7 @@ fn postJsonWithTimeouts(
     connect_timeout_ms: u64,
     read_timeout_ms: u64,
 ) ![]u8 {
-    const io = httpIo();
+    const io = std.Io.Threaded.global_single_threaded.io();
     const pa = std.heap.page_allocator;
 
     const shared = shared_block: {
