@@ -777,6 +777,25 @@ test "ws: provider is built once and cached across requests" {
     try std.testing.expectEqual(@as(usize, 1), build_calls);
 }
 
+test "ws: provider is rebuilt when the requested model changes" {
+    const allocator = std.testing.allocator;
+    build_calls = 0;
+    var game = try game_mod.Game.init(allocator);
+    defer game.deinit();
+    var conn = protocol.ConnState{ .build_provider = countingBuild };
+
+    for ([_][]const u8{ "alpha", "beta" }) |model| {
+        const json = try std.fmt.allocPrint(allocator, "{{\"action\":\"request_llm\",\"model\":\"{s}\"}}", .{model});
+        defer allocator.free(json);
+        const resp = try protocol.handleMessage(allocator, game, &conn, json, .english);
+        defer allocator.free(resp);
+        var state = try parseState(allocator, resp);
+        defer state.deinit();
+        try std.testing.expect(state.value.@"error" == null);
+    }
+    try std.testing.expectEqual(@as(usize, 2), build_calls);
+}
+
 test "ws: game over blocks make_move, compute_minimax and request_llm" {
     const allocator = std.testing.allocator;
     var game = try finishedGame(allocator);

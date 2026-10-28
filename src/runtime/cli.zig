@@ -39,6 +39,8 @@ pub fn runMatch(rules_flag: ?config_mod.Variant, provider_flag: ?[]const u8) !vo
     // ponytail: first model wins — llm player cache keyed once per match; config
     // with two llm players of different models keeps white's provider.
     var llm: ?provider_mod.LlmProvider = null;
+    var llm_provider: ?[]const u8 = null;
+    var llm_model: ?[]const u8 = null;
     defer if (llm) |p| p.deinit();
 
     const variant = rules_flag orelse cfg.rules;
@@ -66,7 +68,7 @@ pub fn runMatch(rules_flag: ?config_mod.Variant, provider_flag: ?[]const u8) !vo
         switch (player) {
             .human => if (try playHuman(game)) return,
             .minimax => |mm| try playMinimax(game, mm.time_limit_ms),
-            .llm => |lc| try playLlm(allocator, game, lc, provider_flag, &llm),
+            .llm => |lc| try playLlm(allocator, game, lc, provider_flag, &llm, &llm_provider, &llm_model),
         }
     }
 }
@@ -112,8 +114,13 @@ fn playLlm(
     cfg: config_mod.LlmConfig,
     provider_flag: ?[]const u8,
     llm: *?provider_mod.LlmProvider,
+    llm_provider: *?[]const u8,
+    llm_model: *?[]const u8,
 ) !void {
-    if (llm.* == null) {
+    const effective_provider = provider_flag orelse cfg.provider;
+    const same = if (llm_provider.*) |cached| if (effective_provider) |want| std.mem.eql(u8, cached, want) else false else effective_provider == null;
+    if (llm.* == null or !same or llm_model.* == null or !std.mem.eql(u8, llm_model.*.?, cfg.model)) {
+        if (llm.*) |p| p.deinit();
         // --provider flag beats the provider in config.json.
         var lcfg = cfg;
         if (provider_flag) |p| lcfg.provider = p;
@@ -125,6 +132,8 @@ fn playLlm(
             },
             else => |err| return err,
         };
+        llm_provider.* = effective_provider;
+        llm_model.* = cfg.model;
     }
     var moves = move_mod.MoveList{};
     game.generateMoves(&moves);

@@ -53,6 +53,8 @@ const State = struct {
     cfg_loaded: bool,
     game: *game_mod.Game,
     llm: ?provider_mod.LlmProvider,
+    llm_provider: ?[]const u8,
+    llm_model: ?[]const u8,
     /// From --provider; null = auto-detect / config.json.
     provider_flag: ?[]const u8,
 
@@ -72,6 +74,8 @@ const State = struct {
             .cfg_loaded = loaded,
             .game = game,
             .llm = null,
+            .llm_provider = null,
+            .llm_model = null,
             .provider_flag = provider_flag,
             .cursor_row = 0,
             .cursor_col = 0,
@@ -331,12 +335,16 @@ fn llmMove(state: *State) !void {
 }
 
 fn ensureLlm(state: *State) !void {
-    if (state.llm != null) return;
     const cfg = llmConfigForTurn(state);
+    const same = if (state.llm_provider) |provider| if (cfg.provider) |want| std.mem.eql(u8, provider, want) else false else cfg.provider == null;
+    if (state.llm != null and same and state.llm_model != null and std.mem.eql(u8, state.llm_model.?, cfg.model)) return;
+    if (state.llm) |p| p.deinit();
     state.llm = factory.fromConfig(state.allocator, cfg) catch |e| switch (e) {
         error.MissingApiKey => return error.MissingApiKey,
         else => |err| return err,
     };
+    state.llm_provider = cfg.provider;
+    state.llm_model = cfg.model;
 }
 
 fn llmConfigForTurn(state: *State) config_mod.LlmConfig {

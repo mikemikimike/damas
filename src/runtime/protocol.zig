@@ -19,11 +19,10 @@ pub const DEFAULT_LLM_MODEL = "llama-3.3-70b-versatile";
 pub const ConnState = struct {
     /// Most recent applied move (null until the first move is played).
     last_move: ?move_mod.Move = null,
-    /// Cached LLM provider, built lazily on the first request_llm.
-    /// factory dups the key/model into provider state, so building per
-    /// request would leak — build once and keep. Tests inject a fake
-    /// provider directly here (no network).
+    /// Cached LLM provider, built lazily and replaced when the requested
+    /// model changes. Tests may inject a fake provider directly here.
     provider: ?provider_mod.LlmProvider = null,
+    provider_model_hash: ?u64 = null,
     /// Provider construction hook, injected by the transport layer: the
     /// server injects a factory-backed builder in serveGame; tests inject
     /// fakes. null = provider unavailable.
@@ -202,10 +201,17 @@ fn getProvider(
     conn: *ConnState,
     model: []const u8,
 ) ?provider_mod.LlmProvider {
-    if (conn.provider) |p| return p;
+    if (conn.provider) |p| {
+        if (conn.provider_model_hash == null and conn.build_provider == null) return p;
+        if (conn.provider_model_hash) |cached| if (cached == std.hash.Wyhash.hash(0, model)) return p;
+        p.deinit();
+        conn.provider = null;
+        conn.provider_model_hash = null;
+    }
     const build = conn.build_provider orelse return null;
     const prov = build(allocator, model) catch return null;
     conn.provider = prov;
+    conn.provider_model_hash = std.hash.Wyhash.hash(0, model);
     return prov;
 }
 
